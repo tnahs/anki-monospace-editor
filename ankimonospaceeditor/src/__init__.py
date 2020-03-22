@@ -4,7 +4,12 @@ from typing import List
 
 import aqt
 
-from . import errors
+from . import errors, highlighter
+
+
+# TODO: Add Tab/Space support. Including forward and back tab.
+#   https://github.com/ericahn/anki-template-editor/
+# TODO: Set tabStopDistance to be equal to length of spaces.
 
 
 class AnkiMonospaceEditor:
@@ -48,20 +53,24 @@ class AnkiMonospaceEditor:
         return self._config.get("font-color-dark", None)
 
     @property
-    def _is_darkmode(self) -> bool:
+    def _font_color(self) -> str:
+        return self._font_color_dark if self._is_dark_mode else self._font_color_light
+
+    @property
+    def _is_dark_mode(self) -> bool:
         return (
             aqt.theme.theme_manager.night_mode
             or aqt.theme.theme_manager.macos_dark_mode()
         )
 
     @property
+    def _show_whitespace(self) -> str:
+        return self._config.get("show-whitespace", True)
+
+    @property
     def _stylesheet(self) -> str:
 
-        font_color = (
-            self._font_color_dark if self._is_darkmode else self._font_color_light
-        )
-
-        if font_color is None:
+        if self._font_color is None:
             return f"""
                 font-family: {self._font_family};
                 font-size: {self._font_size};
@@ -70,20 +79,36 @@ class AnkiMonospaceEditor:
         return f"""
             font-family: {self._font_family};
             font-size: {self._font_size};
-            color: {font_color};
+            color: {self._font_color};
         """
 
     def setup(self) -> None:
         def hook__customize_layout(clayout) -> None:
-            # (aqt.clayout.CardLayout)
+            # (clayout: aqt.clayout.CardLayout)
+            #
+            # NOTE: Currently Anki throws an `AttributeError` when adding type
+            # annotations for `clayout`.
 
-            layouts: List[aqt.at.QTextEdit] = [
+            widgets: List[aqt.qt.QTextEdit] = [
                 clayout.tform.front,
                 clayout.tform.back,
                 clayout.tform.css,
             ]
 
-            for layout in layouts:
-                layout.setStyleSheet(self._stylesheet)
+            for widget in widgets:
+
+                widget.setStyleSheet(self._stylesheet)
+
+                if self._show_whitespace:
+
+                    text_option = widget.document().defaultTextOption()
+                    text_option.setFlags(
+                        text_option.flags() | aqt.qt.QTextOption.ShowTabsAndSpaces
+                    )
+                    widget.document().setDefaultTextOption(text_option)
+
+                    widget.whitespace_highlighter = highlighter.WhitespaceHighlighter(
+                        is_dark_mode=self._is_dark_mode, parent=widget.document()
+                    )
 
         aqt.gui_hooks.card_layout_will_show.append(hook__customize_layout)
