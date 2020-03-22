@@ -3,13 +3,9 @@ import pathlib
 from typing import List
 
 import aqt
+import aqt.clayout
 
 from . import errors, highlighter
-
-
-# TODO: Add Tab/Space support. Including forward and back tab.
-#   https://github.com/ericahn/anki-template-editor/
-# TODO: Set tabStopDistance to be equal to length of spaces.
 
 
 class AnkiMonospaceEditor:
@@ -83,11 +79,7 @@ class AnkiMonospaceEditor:
         """
 
     def setup(self) -> None:
-        def hook__customize_layout(clayout) -> None:
-            # (clayout: aqt.clayout.CardLayout)
-            #
-            # NOTE: Currently Anki throws an `AttributeError` when adding type
-            # annotations for `clayout`.
+        def hook__customize_layout(clayout: aqt.clayout.CardLayout) -> None:
 
             widgets: List[aqt.qt.QTextEdit] = [
                 clayout.tform.front,
