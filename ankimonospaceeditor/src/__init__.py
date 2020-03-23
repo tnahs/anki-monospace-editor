@@ -1,6 +1,6 @@
 import json
 import pathlib
-from typing import List
+from typing import List, Optional
 
 import aqt
 import aqt.clayout
@@ -41,16 +41,16 @@ class AnkiMonospaceEditor:
         return self._config.get("font-size", "12pt")
 
     @property
-    def _font_color_light(self) -> str:
-        return self._config.get("font-color-light", None)
+    def _colors(self) -> dict:
+        return self._config.get("colors", {})
 
     @property
-    def _font_color_dark(self) -> str:
-        return self._config.get("font-color-dark", None)
-
-    @property
-    def _font_color(self) -> str:
-        return self._font_color_dark if self._is_dark_mode else self._font_color_light
+    def _font_color(self) -> Optional[str]:
+        return (
+            self._colors.get("font-dark", None)
+            if self._is_dark_mode
+            else self._colors.get("font-light", None)
+        )
 
     @property
     def _is_dark_mode(self) -> bool:
@@ -99,8 +99,10 @@ class AnkiMonospaceEditor:
                     )
                     widget.document().setDefaultTextOption(text_option)
 
-                    widget.whitespace_highlighter = highlighter.WhitespaceHighlighter(
-                        is_dark_mode=self._is_dark_mode, parent=widget.document()
+                    widget.whitespace_highlighter = highlighter.SyntaxHighlighter(
+                        is_dark_mode=self._is_dark_mode,
+                        colors=self._colors,
+                        parent=widget.document(),
                     )
 
         aqt.gui_hooks.card_layout_will_show.append(hook__customize_layout)

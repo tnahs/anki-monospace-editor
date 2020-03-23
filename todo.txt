@@ -2,3 +2,4 @@ TODO: Add Tab/Space support. Including forward and back tab.
     https://github.com/ericahn/anki-template-editor/
 TODO: Add `indent-width` and `indent-style` for setting `tabs` or `spaces`.
 TODO: Set `tabStopDistance` to be equal to length of spaces.
+TODO: Write tests for `parser.QQColor`

@@ -2,44 +2,66 @@ import re
 
 import aqt
 
+from . import parser
 
-class WhitespaceHighlighter(aqt.qt.QSyntaxHighlighter):
-    def __init__(self, is_dark_mode: bool, parent: aqt.qt.QTextDocument):
+
+class SyntaxHighlighter(aqt.qt.QSyntaxHighlighter):
+    def __init__(self, is_dark_mode: bool, colors: dict, parent: aqt.qt.QTextDocument):
         super().__init__(parent)
 
-        # Whitespace is always rendered as semi-transparent text over the
-        # background of the current text editor. A contrasting color is chosen
-        # based on the current theme Anki is running.
-        color = "white" if is_dark_mode else "black"
+        default_color = "white" if is_dark_mode else "black"
+
+        #
+
+        color_light = colors.get("font-light", None)
+        color_dark = colors.get("font-dark", None)
+        color = color_dark if is_dark_mode else color_light
+
+        accent_color_light = colors.get("font-light-accent", None)
+        accent_color_dark = colors.get("font-dark-accent", None)
+        accent_color = accent_color_dark if is_dark_mode else accent_color_light
+
+        #
+
+        # Create color, format and regex for `mustache` syntax: `{{Field}}`.
+        mustache_color = parser.QQColor(
+            color=accent_color, default=default_color
+        ).parse()
+        mustache_format = aqt.qt.QTextCharFormat()
+        mustache_format.setForeground(mustache_color)
+        mustache_expression = r"{{2}[^{}]*?}{2}"
+        mustache_re_expression = re.compile(mustache_expression)
+
+        # Create color, format and regex for `whitespace` characters.
+        whitespace_color = parser.QQColor(color=color, default=default_color).parse()
+        whitespace_color.setAlpha(32)
+        whitespace_format = aqt.qt.QTextCharFormat()
+        whitespace_format.setForeground(whitespace_color)
+        whitespace_expression = r"(\t|[ ]{2,})"
+        whitespace_re_expression = re.compile(whitespace_expression)
 
         # Create color, format and regex for `transparent` characters.
         transparent_color = aqt.qt.QColor(0, 0, 0, 0)
         transparent_format = aqt.qt.QTextCharFormat()
         transparent_format.setForeground(transparent_color)
-        transparent_expression = r"[ ]"
+        transparent_expression = r"(?<! ) (?! )"
         transparent_re_expression = re.compile(transparent_expression)
 
-        # Create color, format and regex for `highlight` characters.
-        highlight_color = aqt.qt.QColor(color)
-        highlight_color.setAlpha(32)
-        highlight_format = aqt.qt.QTextCharFormat()
-        highlight_format.setForeground(highlight_color)
-        highlight_expression = r"(\t|[ ]{2,})"
-        highlight_re_expression = re.compile(highlight_expression)
-
-        # Single `space` characters are *not* highlight. Therefore it's
-        # important that `highlightBlock` highlights the text in a strict
-        # order. First, all `space` characters are set to the `transparent`
-        # format. Then all `tabs` and greater than two consecutive `space`
-        # characters are set to the `highlighed` format.
+        """ Single `space` characters are *not* highlighted. Therefore it's
+        important that `highlightBlock` formats the text in a strict order.
+        First, all `mustache` syntax are set to the `mustache` format. Then all
+        `tabs` and greater than two consecutive `whitespace` characters are set
+        to the `whitespace` format. Finally, all `space` characters are set to
+        the `transparent` format. """
         self._expressions = {
+            mustache_re_expression: mustache_format,
+            whitespace_re_expression: whitespace_format,
             transparent_re_expression: transparent_format,
-            highlight_re_expression: highlight_format,
         }
 
     def highlightBlock(self, text: str):
 
-        # See `WhitespaceHighlighter.__init__()`.
+        # See `SyntaxHighlighter.__init__()`.
         for expression, format_ in self._expressions.items():
             for match in expression.finditer(text):
 

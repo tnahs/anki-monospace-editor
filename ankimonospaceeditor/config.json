@@ -1,7 +1,11 @@
 {
-    "font-family": "Fira Code",
-    "font-size": "10.5pt",
-    "font-color-dark": "hsl(0, 0%, 75%)",
-    "font-color-light": "hsl(0, 0%, 20%)",
-    "show-whitespace": true
+    "font-family": "Courier",
+    "font-size": "12pt",
+    "show-whitespace": true,
+    "colors": {
+        "font-light": "",
+        "font-light-accent": "",
+        "font-dark": "",
+        "font-dark-accent": ""
+    }
 }
