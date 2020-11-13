@@ -1,5 +1,5 @@
 import re
-from typing import Any, Optional
+from typing import Optional
 
 import aqt
 
@@ -58,27 +58,18 @@ class QQColor:
         flags=re.VERBOSE,
     )
 
-    def __init__(self, color: Optional[str], default: str) -> None:
+    def parse(self, color: Optional[str], default_color: str) -> aqt.qt.QColor:
 
-        self._color = color
-        self._default = default
+        color = default_color if color is None else color
 
-    def parse(self) -> aqt.qt.QColor:
+        obj = self._dispatch_parser(color)
 
-        if not self._color:
-
-            obj = self._dispatch_parser(self._default)
-
-        else:
-
-            obj = self._dispatch_parser(self._color)
-
-            if obj is None:
-                aqt.utils.showInfo(
-                    f"AnkiMonospaceEditor: Error parsing color `{self._color}` "
-                    f"in `config.json`."
-                )
-                obj = self._dispatch_parser(self._default)
+        if obj is None:
+            aqt.utils.showInfo(
+                f"AnkiMonospaceEditor: Error parsing color `{color}` "
+                f"in `config.json`."
+            )
+            obj = self._dispatch_parser(default_color)
 
         return obj
 

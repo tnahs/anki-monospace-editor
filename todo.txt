@@ -1,4 +1,4 @@
-TODO: Separate the syntax highligher for `css` and `html`.
+TODO: Separate the syntax highlighter for `css` and `html`.
 TODO: Write tests for `parser.QQColor`
 TODO: Add Tab/Space support. Including forward and back tab.
     https://github.com/ericahn/anki-template-editor/
